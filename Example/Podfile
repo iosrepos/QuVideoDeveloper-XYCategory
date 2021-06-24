@@ -1,0 +1,13 @@
+#use_frameworks!
+
+platform :ios, '9.0'
+
+target 'XYCategory_Example' do
+  pod 'XYCategory', :path => '../'
+
+  target 'XYCategory_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
