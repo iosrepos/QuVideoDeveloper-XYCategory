@@ -13,7 +13,6 @@
 #include <net/if_dl.h>
 #import <AdSupport/AdSupport.h>
 #include <mach/mach.h>
-#import "NSString+XYUUID.h"
 
 // IDFA 存储key
 static NSString *const XY_IDFA_CACHE_KEY = @"XY_IDFA_CACHE_KEY";
@@ -132,13 +131,21 @@ static NSString *const XY_IDFA_CACHE_KEY = @"XY_IDFA_CACHE_KEY";
         return YES;
     }
     
-    NSString *path = [NSString stringWithFormat:@"/private/%@", [NSString xy_UUIDString]];
+    NSString *path = [NSString stringWithFormat:@"/private/%@", [self.class xy_UUIDString]];
     if ([@"test" writeToFile : path atomically : YES encoding : NSUTF8StringEncoding error : NULL]) {
         [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
         return YES;
     }
     
     return NO;
+}
+
+
++ (NSString *)xy_UUIDString {
+    CFUUIDRef uuid = CFUUIDCreate(NULL);
+    CFStringRef string = CFUUIDCreateString(NULL, uuid);
+    CFRelease(uuid);
+    return (__bridge_transfer NSString *)string;
 }
 
 - (NSString *)xy_machineModel {
