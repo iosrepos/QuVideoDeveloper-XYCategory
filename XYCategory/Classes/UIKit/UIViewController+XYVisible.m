@@ -37,7 +37,9 @@
     for (UIWindow *window in [windows reverseObjectEnumerator]) {
         if ([window isKindOfClass:[UIWindow class]]
             && CGRectEqualToRect(window.bounds, [UIScreen mainScreen].bounds)
-            && !window.hidden) {
+            && !window.hidden
+            && ![NSStringFromClass(window.class) isEqualToString:@"UITextEffectsWindow"]
+            && ![NSStringFromClass(window.class) isEqualToString:@"UIRemoteKeyboardWindow"]) {
             return window;
         }
     }
