@@ -13,6 +13,7 @@
 #include <net/if_dl.h>
 #import <AdSupport/AdSupport.h>
 #include <mach/mach.h>
+#include <sys/mount.h>
 
 // IDFA 存储key
 static NSString *const XY_IDFA_CACHE_KEY = @"XY_IDFA_CACHE_KEY";
@@ -329,12 +330,33 @@ static NSString *const XY_IDFA_CACHE_KEY = @"XY_IDFA_CACHE_KEY";
 }
 
 - (int64_t)xy_diskSpaceFree {
+    int64_t totalFreeSpace = 0.0;
     NSError *error = nil;
-    NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfFileSystemForPath:NSHomeDirectory() error:&error];
-    if (error) return -1;
-    int64_t space =  [[attrs objectForKey:NSFileSystemFreeSize] longLongValue];
-    if (space < 0) space = -1;
-    return space;
+        
+    if (@available(iOS 11.0, *)) {
+        NSURL *fileURL = [[NSURL alloc] initFileURLWithPath:NSTemporaryDirectory()];
+        NSDictionary *results = [fileURL resourceValuesForKeys:@[NSURLVolumeAvailableCapacityForImportantUsageKey] error:&error];
+        if (!results) {
+            totalFreeSpace = [self fressDiskSpaceInBytesLessSystem11];
+        } else {
+            totalFreeSpace = [[results objectForKey:NSURLVolumeAvailableCapacityForImportantUsageKey] floatValue];
+        }
+    } else {
+        totalFreeSpace = [self fressDiskSpaceInBytesLessSystem11];
+    }
+    return totalFreeSpace;
+}
+
+- (int64_t)fressDiskSpaceInBytesLessSystem11 {
+    struct statfs buf;
+    int64_t freespace = -1;
+    if(statfs("/var", &buf) >= 0){
+        freespace = (int64_t)(buf.f_bsize * buf.f_bavail);
+        NSInteger systemSpace = 240 * 1024 * 1024;
+        freespace -= systemSpace;
+        freespace = (freespace<0)?0:freespace;
+    }
+    return freespace;
 }
 
 - (int64_t)xy_diskSpaceUsed {
