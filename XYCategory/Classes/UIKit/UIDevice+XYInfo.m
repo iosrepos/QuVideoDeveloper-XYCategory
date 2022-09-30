@@ -312,6 +312,70 @@ static NSString *const XY_IDFA_CACHE_KEY = @"XY_IDFA_CACHE_KEY";
     return cellularProviderName;
 }
 
+- (NSArray<NSString *> *)xy_cellularNameList {
+    NSMutableArray *tmp = [NSMutableArray arrayWithCapacity:2];
+    CTTelephonyNetworkInfo *networkInfo = [[CTTelephonyNetworkInfo alloc] init];
+    if (@available(iOS 12.0, *)) {
+        NSDictionary *providers = [networkInfo serviceSubscriberCellularProviders];
+        NSArray<CTCarrier *> *carriers = providers.allValues;
+        [carriers enumerateObjectsUsingBlock:^(CTCarrier * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            if (obj.isoCountryCode && [obj.carrierName isKindOfClass:[NSString class]]
+                && obj.carrierName.length > 0) {
+                [tmp addObject:obj.carrierName];
+            }
+        }];
+    } else {
+        CTCarrier *carrier = [networkInfo subscriberCellularProvider];
+        if (carrier.isoCountryCode && [carrier.carrierName isKindOfClass:[NSString class]] && carrier.carrierName.length > 0) {
+            [tmp addObject:carrier.carrierName];
+        }
+    }
+    return tmp;
+}
+
+- (XYCellularNetworkType)xy_cellularType {
+    NSString *status = nil;
+    XYCellularNetworkType networkType = XYCellularNetworkTypeUnknown;
+    CTTelephonyNetworkInfo *networkInfo = [[CTTelephonyNetworkInfo alloc] init];
+
+    if (@available(iOS 12.0, *)) {
+        // iOS 12.0 及以上
+        NSDictionary *statusDict = networkInfo.serviceCurrentRadioAccessTechnology;
+        status = statusDict.allValues.firstObject;
+    } else {
+        status = networkInfo.currentRadioAccessTechnology;
+    }
+
+    if (status && [status isKindOfClass:[NSString class]] && status.length > 0) {
+        if ([status isEqualToString:CTRadioAccessTechnologyGPRS] ||
+            [status isEqualToString:CTRadioAccessTechnologyEdge] ||
+            [status isEqualToString:CTRadioAccessTechnologyCDMA1x]) {
+          networkType = XYCellularNetworkType2G;
+        } else if ([status isEqualToString:CTRadioAccessTechnologyCDMAEVDORev0] ||
+                   [status isEqualToString:CTRadioAccessTechnologyCDMAEVDORevA] ||
+                   [status isEqualToString:CTRadioAccessTechnologyCDMAEVDORevB] ||
+                   [status isEqualToString:CTRadioAccessTechnologyWCDMA] ||
+                   [status isEqualToString:CTRadioAccessTechnologyHSDPA] ||
+                   [status isEqualToString:CTRadioAccessTechnologyHSUPA] ||
+                   [status isEqualToString:CTRadioAccessTechnologyeHRPD])
+
+        {
+          networkType = XYCellularNetworkType3G;
+        } else if ([status isEqualToString:CTRadioAccessTechnologyLTE]) {
+          networkType = XYCellularNetworkType4G;
+        }
+        
+        if (@available(iOS 14.1, *)) {
+            if ([status isEqualToString:CTRadioAccessTechnologyNR] ||
+                [status isEqualToString:CTRadioAccessTechnologyNRNSA]) {
+                networkType = XYCellularNetworkType5G;
+            }
+        }
+    }
+
+    return networkType;
+}
+
 - (BOOL)xy_is64Bit {
 #if defined(__LP64__) && __LP64__
     return YES;

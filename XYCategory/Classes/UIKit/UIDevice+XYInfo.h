@@ -10,6 +10,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSInteger, XYCellularNetworkType)
+{
+    /**
+     *  未知
+     */
+    XYCellularNetworkTypeUnknown      = 0,
+    
+    /// 2G网络
+    XYCellularNetworkType2G   = 1,
+    
+    /// 3G网络
+    XYCellularNetworkType3G   = 2,
+    
+    /// 4G网络
+    XYCellularNetworkType4G   = 3,
+    
+    /// 5G网络
+    XYCellularNetworkType5G   = 4,
+};
+
 @interface UIDevice (XYInfo)
 
 @property (readonly, nonatomic) NSString * xy_macAddressString; /// mac地址
@@ -20,6 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic, nullable) NSString * xy_machineModel; /// 设备型号 iPhone6,2
 @property (readonly, nonatomic, nullable) NSString * xy_machineModelName; /// 设备名称 iPhone 5s
 @property (readonly, nonatomic) NSString * xy_cellularProvicerName; /// 运营商名字
+@property (readonly, nonatomic) NSArray<NSString *> * xy_cellularNameList; /// 运营商名字列表
+@property (readonly, nonatomic) XYCellularNetworkType xy_cellularType; /// 蜂窝网络类型，例如，3G，4G，5G
 @property (readonly, nonatomic) BOOL xy_is64Bit; /// 设备是否是64位
 
 //=============================== Disk Space ===========================================
